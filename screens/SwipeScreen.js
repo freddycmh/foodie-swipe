@@ -51,8 +51,8 @@ const SwipeScreen = () => {
 
     const photoRef = restaurant.photos?.[0]?.photo_reference;
     const photoUrl = photoRef
-      ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=AIzaSyAwCMpTQojHt4trQfoel3h45BzxkL7Knkg`
-      : null;
+  ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
+  : null;
 
     return (
       <View style={styles.card}>
