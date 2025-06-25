@@ -1,6 +1,7 @@
-import React, { createContext, useState } from 'react';
+// context/LikedContext.js
+import React, { createContext, useContext, useState } from 'react';
 
-export const LikedContext = createContext();
+const LikedContext = createContext();
 
 export const LikedProvider = ({ children }) => {
   const [liked, setLiked] = useState([]);
@@ -11,3 +12,6 @@ export const LikedProvider = ({ children }) => {
     </LikedContext.Provider>
   );
 };
+
+export const useLiked = () => useContext(LikedContext);
+export { LikedContext };

@@ -1,5 +1,12 @@
 import React, { useContext } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+} from 'react-native';
 import { LikedContext } from '../context/LikedContext';
 
 const ResultScreen = () => {
@@ -8,55 +15,71 @@ const ResultScreen = () => {
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <Text style={styles.name}>{item.name}</Text>
-      <Text style={styles.details}>{item.vicinity}</Text>
-      <Text style={styles.details}>⭐ {item.rating || 'N/A'}</Text>
+      <Text style={styles.info}>{item.address || item.vicinity}</Text>
+      <Text style={styles.info}>⭐ {item.rating || 'N/A'}</Text>
+      <Text style={styles.info}>
+        ☎ {item.phone !== 'N/A' ? item.phone : 'Phone not available'}
+      </Text>
+      {item.hours?.[0] && (
+        <Text style={styles.info}>🕒 {item.hours[0]}</Text>
+      )}
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Your Liked Restaurants</Text>
-      <FlatList
-        data={liked}
-        keyExtractor={(item) => item.place_id}
-        renderItem={renderItem}
-      />
-    </View>
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" />
+      <View style={styles.container}>
+        <Text style={styles.title}>Your Liked Restaurants</Text>
+        <FlatList
+          data={liked}
+          keyExtractor={(item) => item.place_id || item.id}
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingBottom: 20 }}
+        />
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: '#fdfcfb', // softer white
+  },
   container: {
     flex: 1,
-    paddingTop: 40,
     paddingHorizontal: 16,
-    backgroundColor: '#fff',
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginVertical: 20,
     textAlign: 'center',
     color: '#FF5A5F',
   },
   card: {
-    backgroundColor: '#fcefe9',
+    backgroundColor: '#f8f4f0',
     padding: 16,
     marginBottom: 12,
     borderRadius: 12,
+    borderColor: '#eee',
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
+    shadowRadius: 4,
   },
   name: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 17,
+    fontWeight: '600',
     marginBottom: 4,
+    color: '#333',
   },
-  details: {
+  info: {
     fontSize: 14,
-    color: '#666',
+    color: '#555',
+    marginBottom: 2,
   },
 });
 

@@ -1,14 +1,17 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import AppNavigator from './navigation/AppNavigator'; // ✅ Make sure this exists
-import { LikedProvider } from './context/LikedContext'; // ✅ Important
+import AppNavigator from './navigation/AppNavigator';
+import { LikedProvider } from './context/LikedContext';
+import { FilterProvider } from './context/FilterContext'; // ✅ must be here
 
 export default function App() {
   return (
     <LikedProvider>
-      <NavigationContainer>
-        <AppNavigator />
-      </NavigationContainer>
+      <FilterProvider> {/* ✅ This wraps the app */}
+        <NavigationContainer>
+          <AppNavigator />
+        </NavigationContainer>
+      </FilterProvider>
     </LikedProvider>
   );
 }
