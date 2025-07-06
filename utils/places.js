@@ -3,46 +3,64 @@ import { GOOGLE_API_KEY } from '../config';
 
 const BASE_URL = 'https://maps.googleapis.com/maps/api/place';
 
+/**
+ * Fetches up to ~60 basic nearby restaurants based on filters.
+ */
 export const fetchNearbyRestaurants = async (lat, lng, filters = {}) => {
   try {
-    const response = await axios.get(`${BASE_URL}/nearbysearch/json`, {
-      params: {
-        location: `${lat},${lng}`,
-        radius: 2000,
-        type: 'restaurant',
-        keyword: filters.cuisine || '',
-        minprice: filters.budget === '$' ? 0 : filters.budget === '$$' ? 1 : 2,
-        maxprice: filters.budget === '$' ? 1 : filters.budget === '$$' ? 2 : 4,
-        key: GOOGLE_API_KEY,
-      },
-    });
+    let allPlaces = [];
+    let nextPageToken = null;
+    let fetchCount = 0;
 
-    const places = response.data.results.filter((place) => {
-      const rating = parseFloat(place.rating || '0');
-      const minRating = parseFloat(filters.rating || '4');
-      return rating >= minRating;
-    });
+    const baseParams = {
+      location: `${lat},${lng}`,
+      radius: 2000,
+      type: 'restaurant',
+      keyword: filters.cuisine || '',
+      minprice: filters.budget === '$' ? 0 : filters.budget === '$$' ? 1 : 2,
+      maxprice: filters.budget === '$' ? 1 : filters.budget === '$$' ? 2 : 4,
+      key: GOOGLE_API_KEY,
+    };
 
-    const detailed = await Promise.all(
-      places.slice(0, 20).map(async (place) => {
-        const detail = await fetchPlaceDetails(place.place_id);
-        return {
-          id: place.place_id,
-          name: place.name,
-          rating: place.rating,
-          address: place.vicinity,
-          ...detail,
-        };
-      })
-    );
+    do {
+      const response = await axios.get(`${BASE_URL}/nearbysearch/json`, {
+        params: nextPageToken
+          ? { pagetoken: nextPageToken, key: GOOGLE_API_KEY }
+          : baseParams,
+      });
 
-    return detailed;
+      const results = response.data.results || [];
+      allPlaces = [...allPlaces, ...results];
+
+      nextPageToken = response.data.next_page_token;
+      fetchCount++;
+
+      if (nextPageToken) {
+        await new Promise((res) => setTimeout(res, 2000));
+      }
+    } while (nextPageToken && fetchCount < 3); // Up to ~60 total
+
+    const minRating = parseFloat(filters.rating || '4');
+
+    // Return only basic restaurant info
+    return allPlaces
+      .filter((place) => parseFloat(place.rating || '0') >= minRating)
+      .slice(0, 50)
+      .map((place) => ({
+        id: place.place_id,
+        name: place.name,
+        rating: place.rating,
+        address: place.vicinity,
+      }));
   } catch (err) {
     console.error('Error fetching restaurants:', err);
     return [];
   }
 };
 
+/**
+ * Lazily fetches full detail for a given place_id.
+ */
 export const fetchPlaceDetails = async (placeId) => {
   try {
     const res = await axios.get(`${BASE_URL}/details/json`, {

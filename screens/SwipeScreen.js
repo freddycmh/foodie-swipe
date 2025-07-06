@@ -1,104 +1,110 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
-import { useNavigation, useIsFocused } from '@react-navigation/native';
-import { getUserLocation } from '../utils/location';
-import { fetchNearbyRestaurants } from '../utils/places';
-import { LikedContext } from '../context/LikedContext';
-import { FilterContext } from '../context/FilterContext';
 import SwipeCard from '../components/SwipeCard';
+import { fetchNearbyRestaurants, fetchPlaceDetails } from '../utils/places';
+import { getUserLocation } from '../utils/location';
+import { useFilter } from '../context/FilterContext';
+import { useLiked } from '../context/LikedContext';
 
 const SwipeScreen = () => {
-  const navigation = useNavigation();
-  const isFocused = useIsFocused();
-
-  const { setLiked } = useContext(LikedContext);
-  const { filters } = useContext(FilterContext);
-
   const [restaurants, setRestaurants] = useState([]);
-  const [localLiked, setLocalLiked] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [detailsMap, setDetailsMap] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const { filters } = useFilter();
+  const { addLiked } = useLiked();
 
   useEffect(() => {
     const loadRestaurants = async () => {
+      setIsLoading(true);
       try {
-        setLoading(true);
-        const coords = await getUserLocation();
-        const results = await fetchNearbyRestaurants(
-          coords.latitude,
-          coords.longitude,
-          filters || {}
-        );
-        setRestaurants(results);
-        setLocalLiked([]);
+        const location = await getUserLocation();
+        const basicList = await fetchNearbyRestaurants(location.latitude, location.longitude, filters);
+        setRestaurants(basicList);
+
+        // Preload first 10 card details
+        basicList.slice(0, 10).forEach((r) => loadDetails(r.id));
       } catch (err) {
-        console.error('Failed to load restaurants:', err);
+        console.error(err);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
-    if (isFocused) {
-      loadRestaurants();
-    }
-  }, [isFocused, filters]);
+    loadRestaurants();
+  }, [filters]);
 
-  const onSwipedRight = (index) => {
-    const liked = restaurants[index];
-    if (liked) {
-      const updated = [...localLiked, liked];
-      setLocalLiked(updated);
-      if (updated.length === 10) {
-        setLiked(updated);
-        navigation.navigate('Result');
-      }
+  const loadDetails = async (placeId) => {
+    if (detailsMap[placeId]) return;
+    try {
+      const detail = await fetchPlaceDetails(placeId);
+      setDetailsMap((prev) => ({ ...prev, [placeId]: detail }));
+    } catch (err) {
+      console.error('Error loading detail for', placeId, err);
     }
   };
 
-  if (loading) {
-    return <ActivityIndicator size="large" style={{ flex: 1 }} />;
+  const handleSwiped = (index) => {
+    setCurrentIndex(index + 1);
+
+    // Preload next 3 cards
+    for (let i = index + 1; i <= index + 3 && i < restaurants.length; i++) {
+      loadDetails(restaurants[i].id);
+    }
+  };
+
+  const handleLike = (index) => {
+    const restaurant = restaurants[index];
+    const detail = detailsMap[restaurant.id];
+    if (restaurant && detail) {
+      addLiked({ ...restaurant, ...detail });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   return (
     <View style={styles.container}>
-      <Swiper
-        cards={restaurants}
-        renderCard={(restaurant, index) =>
-          restaurant ? (
-            <SwipeCard
-              restaurant={restaurant}
-              index={index}
-              total={restaurants.length}
-            />
-          ) : null
-        }
-        onSwipedRight={onSwipedRight}
-        onSwiped={(i) => {}}
-        cardIndex={0}
-        backgroundColor="transparent"
-        stackSize={3}
-        verticalSwipe={false}
-        overlayLabels={{
-          left: {
-            title: 'NOPE',
-            style: { label: { color: 'red', fontSize: 24 } },
-          },
-          right: {
-            title: 'LIKE',
-            style: { label: { color: 'green', fontSize: 24 } },
-          },
-        }}
-      />
+      {restaurants.length > 0 ? (
+        <>
+          <Swiper
+            cards={restaurants}
+            renderCard={(restaurant) => (
+              <SwipeCard
+                restaurant={restaurant}
+                detail={detailsMap[restaurant.id]}
+              />
+            )}
+            onSwiped={handleSwiped}
+            onSwipedRight={handleLike}
+            cardIndex={currentIndex}
+            backgroundColor="transparent"
+            stackSize={3}
+          />
+          <Text style={styles.counter}>
+            {currentIndex + 1} / {restaurants.length}
+          </Text>
+        </>
+      ) : (
+        <Text style={styles.noResult}>No restaurants found</Text>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-  },
+  container: { flex: 1, backgroundColor: '#fff', padding: 16 },
+  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  noResult: { marginTop: 40, fontSize: 16, textAlign: 'center' },
+  counter: { textAlign: 'center', marginTop: 10, fontSize: 14, color: '#888' },
 });
 
 export default SwipeScreen;

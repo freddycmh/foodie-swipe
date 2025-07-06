@@ -1,72 +1,80 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, ActivityIndicator } from 'react-native';
 
-const SwipeCard = ({ restaurant, index, total }) => {
-  if (!restaurant) return null;
+const SwipeCard = ({ restaurant, detail }) => {
+  const image = detail?.image || 'https://via.placeholder.com/400?text=Loading...';
 
   return (
     <View style={styles.card}>
       <Image
-        source={
-          restaurant.image
-            ? { uri: restaurant.image }
-            : require('../assets/no-image.png')
-        }
+        source={{ uri: image }}
         style={styles.image}
         resizeMode="cover"
       />
-      <Text style={styles.name}>{restaurant.name || 'Unknown Restaurant'}</Text>
-      <Text style={styles.rating}>⭐ {restaurant.rating || 'N/A'}</Text>
-      <Text style={styles.phone}>
-        {restaurant.phone && restaurant.phone !== 'N/A'
-          ? restaurant.phone
-          : 'Phone not available'}
-      </Text>
-      <Text style={styles.counter}>
-        {index + 1} / {total}
-      </Text>
+      <View style={styles.info}>
+        <Text style={styles.name}>{restaurant.name}</Text>
+        <Text style={styles.rating}>⭐ {restaurant.rating || 'N/A'}</Text>
+
+        {detail?.phone ? (
+          <Text style={styles.phone}>{detail.phone}</Text>
+        ) : (
+          <ActivityIndicator size="small" style={styles.loader} />
+        )}
+
+        {detail?.hours?.length ? (
+          <Text style={styles.hours}>{detail.hours[0]}</Text>
+        ) : (
+          <ActivityIndicator size="small" style={styles.loader} />
+        )}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
+    backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 4,
-    height: '80%',
+    paddingBottom: 16,
+    alignItems: 'center',
   },
   image: {
     width: '100%',
-    height: 200,
-    borderRadius: 8,
-    backgroundColor: '#ccc',
-    marginBottom: 12,
+    height: 240,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    backgroundColor: '#f0f0f0',
+  },
+  info: {
+    padding: 12,
+    alignItems: 'center',
   },
   name: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 4,
   },
   rating: {
     fontSize: 16,
-    marginBottom: 2,
+    color: '#777',
+    marginVertical: 4,
   },
   phone: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
+    color: '#555',
+    marginTop: 4,
   },
-  counter: {
+  hours: {
     fontSize: 12,
     color: '#999',
-    marginTop: 8,
+    marginTop: 4,
+  },
+  loader: {
+    marginTop: 6,
   },
 });
 
