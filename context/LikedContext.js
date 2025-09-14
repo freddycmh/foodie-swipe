@@ -9,12 +9,18 @@ export const LikedProvider = ({ children }) => {
     setLiked((prev) => [...prev, restaurant]);
   };
 
+  const removeLiked = (restaurantId) => {
+    setLiked((prev) => prev.filter(restaurant =>
+      (restaurant.place_id || restaurant.id) !== restaurantId
+    ));
+  };
+
   const clearLiked = () => {
     setLiked([]);
   };
 
   return (
-    <LikedContext.Provider value={{ liked, addLiked, clearLiked }}>
+    <LikedContext.Provider value={{ liked, addLiked, removeLiked, clearLiked }}>
       {children}
     </LikedContext.Provider>
   );

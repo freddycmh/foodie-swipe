@@ -66,7 +66,7 @@ export const fetchPlaceDetails = async (placeId) => {
     const res = await axios.get(`${BASE_URL}/details/json`, {
       params: {
         place_id: placeId,
-        fields: 'formatted_phone_number,opening_hours,photos',
+        fields: 'formatted_phone_number,opening_hours,photos,formatted_address',
         key: GOOGLE_API_KEY,
       },
     });
@@ -77,6 +77,7 @@ export const fetchPlaceDetails = async (placeId) => {
     return {
       phone: result.formatted_phone_number || 'N/A',
       hours: result.opening_hours?.weekday_text || [],
+      address: result.formatted_address || null,
       image: photoRef
         ? `${BASE_URL}/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_API_KEY}`
         : 'https://via.placeholder.com/400?text=No+Image',
@@ -86,6 +87,7 @@ export const fetchPlaceDetails = async (placeId) => {
     return {
       phone: 'N/A',
       hours: [],
+      address: null,
       image: 'https://via.placeholder.com/400?text=No+Image',
     };
   }

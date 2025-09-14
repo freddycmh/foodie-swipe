@@ -4,9 +4,9 @@ const FilterContext = createContext();
 
 export const FilterProvider = ({ children }) => {
   const [filters, setFilters] = useState({
-    cuisine: 'japanese',
-    budget: '$',
-    rating: '4',
+    cuisine: null,
+    budget: null,
+    rating: null,
   });
 
   return (
