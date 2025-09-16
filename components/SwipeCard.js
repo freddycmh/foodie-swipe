@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, ActivityIndicator, Dimensions, TouchableOpacity, Linking, Platform, Alert } from 'react-native';
+import { View, Text, Image, StyleSheet, ActivityIndicator, Dimensions, TouchableOpacity, Linking, Platform, Alert, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
 import { getUserLocation } from '../utils/location';
 import { calculateDistance } from '../utils/distance';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-const SwipeCard = ({ restaurant, detail }) => {
+const SwipeCard = ({ restaurant, detail, onLike, onReject }) => {
   const image = detail?.image || 'https://via.placeholder.com/400x300/f0f0f0/999999?text=🍽️+Loading+Image';
   const [userLocation, setUserLocation] = useState(null);
   const [distance, setDistance] = useState(null);
@@ -88,106 +89,133 @@ const SwipeCard = ({ restaurant, detail }) => {
   };
 
   return (
-    <View style={styles.card}>
-      <View style={styles.imageContainer}>
-        <Image
-          source={{ uri: image }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-        <View style={styles.gradient} />
-        <View style={styles.ratingBadge}>
-          <Text style={styles.ratingText}>⭐ {restaurant.rating || 'N/A'}</Text>
-        </View>
-      </View>
+    <>
+      <View style={styles.card}>
+        <ScrollView
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.imageContainer}>
+            <Image
+              source={{ uri: image }}
+              style={styles.image}
+              resizeMode="cover"
+            />
+            <View style={styles.gradient} />
+            <View style={styles.ratingBadge}>
+              <Text style={styles.ratingText}>⭐ {restaurant.rating || 'N/A'}</Text>
+            </View>
+          </View>
 
-      <View style={styles.info}>
-        <Text style={styles.name} numberOfLines={2}>{restaurant.name}</Text>
+          <View style={styles.info}>
+            <Text style={styles.name} numberOfLines={2}>{restaurant.name}</Text>
 
-        {/* Map and Distance */}
-        {restaurant.coordinates && userLocation && (
-          <View style={styles.mapContainer}>
-            <MapView
-              style={styles.map}
-              initialRegion={{
-                latitude: (userLocation.latitude + restaurant.coordinates.latitude) / 2,
-                longitude: (userLocation.longitude + restaurant.coordinates.longitude) / 2,
-                latitudeDelta: Math.abs(userLocation.latitude - restaurant.coordinates.latitude) * 2.5 || 0.01,
-                longitudeDelta: Math.abs(userLocation.longitude - restaurant.coordinates.longitude) * 2.5 || 0.01,
-              }}
-              showsUserLocation={false}
-              showsMyLocationButton={false}
-              scrollEnabled={false}
-              zoomEnabled={false}
-              rotateEnabled={false}
-            >
-              <Marker
-                coordinate={userLocation}
-                title="Your Location"
-                pinColor="blue"
-              />
-              <Marker
-                coordinate={restaurant.coordinates}
-                title={restaurant.name}
-                pinColor="red"
-              />
-            </MapView>
-            {distance && (
-              <View style={styles.distanceBadge}>
-                <Text style={styles.distanceText}>📍 {distance}</Text>
+            {/* Map and Distance */}
+            {restaurant.coordinates && userLocation && (
+              <View style={styles.mapContainer}>
+                <MapView
+                  style={styles.map}
+                  initialRegion={{
+                    latitude: (userLocation.latitude + restaurant.coordinates.latitude) / 2,
+                    longitude: (userLocation.longitude + restaurant.coordinates.longitude) / 2,
+                    latitudeDelta: Math.abs(userLocation.latitude - restaurant.coordinates.latitude) * 2.5 || 0.01,
+                    longitudeDelta: Math.abs(userLocation.longitude - restaurant.coordinates.longitude) * 2.5 || 0.01,
+                  }}
+                  showsUserLocation={false}
+                  showsMyLocationButton={false}
+                  scrollEnabled={false}
+                  zoomEnabled={false}
+                  rotateEnabled={false}
+                >
+                  <Marker
+                    coordinate={userLocation}
+                    title="Your Location"
+                    pinColor="blue"
+                  />
+                  <Marker
+                    coordinate={restaurant.coordinates}
+                    title={restaurant.name}
+                    pinColor="red"
+                  />
+                </MapView>
+                {distance && (
+                  <View style={styles.distanceBadge}>
+                    <Text style={styles.distanceText}>📍 {distance}</Text>
+                  </View>
+                )}
               </View>
             )}
+
+            <View style={styles.detailsContainer}>
+              {(detail?.address || restaurant.vicinity || restaurant.address) ? (
+                <TouchableOpacity style={[styles.detailRow, styles.addressRow]} onPress={openDirections} activeOpacity={0.7}>
+                  <Text style={styles.detailIcon}>📍</Text>
+                  <Text style={styles.address} numberOfLines={2}>
+                    {detail?.address || restaurant.vicinity || restaurant.address}
+                  </Text>
+                  <Text style={styles.directionsIcon}>🧭</Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.detailRow}>
+                  <ActivityIndicator size="small" color="#ff6b6b" />
+                  <Text style={styles.loadingText}>Loading address...</Text>
+                </View>
+              )}
+
+              {detail?.hours?.length ? (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailIcon}>🕐</Text>
+                  <Text style={styles.hours}>{detail.hours[0]}</Text>
+                </View>
+              ) : (
+                <View style={styles.detailRow}>
+                  <ActivityIndicator size="small" color="#ff6b6b" />
+                  <Text style={styles.loadingText}>Loading hours...</Text>
+                </View>
+              )}
+
+              {detail?.phone ? (
+                <TouchableOpacity style={[styles.detailRow, styles.phoneRow]} onPress={makePhoneCall} activeOpacity={0.7}>
+                  <Text style={styles.detailIcon}>📞</Text>
+                  <Text style={styles.phone}>{detail.phone}</Text>
+                  <Text style={styles.callIcon}>📱</Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.detailRow}>
+                  <ActivityIndicator size="small" color="#ff6b6b" />
+                  <Text style={styles.loadingText}>Loading phone...</Text>
+                </View>
+              )}
+            </View>
           </View>
-        )}
-
-        <View style={styles.detailsContainer}>
-          {detail?.phone ? (
-            <TouchableOpacity style={[styles.detailRow, styles.phoneRow]} onPress={makePhoneCall} activeOpacity={0.7}>
-              <Text style={styles.detailIcon}>📞</Text>
-              <Text style={styles.phone}>{detail.phone}</Text>
-              <Text style={styles.callIcon}>📱</Text>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.detailRow}>
-              <ActivityIndicator size="small" color="#ff6b6b" />
-              <Text style={styles.loadingText}>Loading phone...</Text>
-            </View>
-          )}
-
-          {detail?.hours?.length ? (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailIcon}>🕐</Text>
-              <Text style={styles.hours}>{detail.hours[0]}</Text>
-            </View>
-          ) : (
-            <View style={styles.detailRow}>
-              <ActivityIndicator size="small" color="#ff6b6b" />
-              <Text style={styles.loadingText}>Loading hours...</Text>
-            </View>
-          )}
-
-          {(detail?.address || restaurant.vicinity || restaurant.address) ? (
-            <TouchableOpacity style={[styles.detailRow, styles.addressRow]} onPress={openDirections} activeOpacity={0.7}>
-              <Text style={styles.detailIcon}>📍</Text>
-              <Text style={styles.address} numberOfLines={2}>
-                {detail?.address || restaurant.vicinity || restaurant.address}
-              </Text>
-              <Text style={styles.directionsIcon}>🧭</Text>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.detailRow}>
-              <ActivityIndicator size="small" color="#ff6b6b" />
-              <Text style={styles.loadingText}>Loading address...</Text>
-            </View>
-          )}
-        </View>
+        </ScrollView>
       </View>
-    </View>
+
+      {/* Action Buttons - Floating outside card */}
+      <View style={styles.actionButtons}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.rejectButton]}
+          onPress={() => onReject?.(restaurant)}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="close" size={32} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.likeButton]}
+          onPress={() => onLike?.(restaurant)}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="heart" size={32} color="#fff" />
+        </TouchableOpacity>
+      </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
+    flex: 1,
     borderRadius: 20,
     backgroundColor: '#fff',
     shadowColor: '#000',
@@ -197,6 +225,12 @@ const styles = StyleSheet.create({
     elevation: 8,
     marginHorizontal: 4,
     overflow: 'hidden',
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 20,
   },
   imageContainer: {
     position: 'relative',
@@ -341,6 +375,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#333',
+  },
+  actionButtons: {
+    position: 'absolute',
+    bottom: 90, // Space above navigation bar
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+  },
+  actionButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  rejectButton: {
+    backgroundColor: '#ff4458',
+  },
+  likeButton: {
+    backgroundColor: '#42c767',
   },
 });
 

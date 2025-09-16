@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
-import Swiper from 'react-native-deck-swiper';
+import { View, ActivityIndicator, StyleSheet, Text, FlatList } from 'react-native';
 import SwipeCard from '../components/SwipeCard';
 import { fetchNearbyRestaurants, fetchPlaceDetails } from '../utils/places';
 import { getUserLocation } from '../utils/location';
@@ -24,13 +23,8 @@ const SwipeScreen = () => {
         const basicList = await fetchNearbyRestaurants(location.latitude, location.longitude, filters);
         setRestaurants(basicList);
 
-        // Load first card details immediately before showing swiper
-        if (basicList.length > 0 && basicList[0] && basicList[0].id) {
-          await loadDetails(basicList[0].id);
-        }
-
-        // Preload next 9 card details in background
-        basicList.slice(1, 10).forEach((r) => {
+        // Load details for first few cards
+        basicList.slice(0, 5).forEach((r) => {
           if (r && r.id) {
             loadDetails(r.id);
           }
@@ -55,26 +49,39 @@ const SwipeScreen = () => {
     }
   };
 
-  const handleSwiped = (index) => {
-    setCurrentIndex(index + 1);
-
-    // Preload next 3 cards
-    for (let i = index + 1; i <= index + 3 && i < restaurants.length; i++) {
-      if (restaurants[i] && restaurants[i].id) {
-        loadDetails(restaurants[i].id);
-      }
-    }
-  };
-
-  const handleLike = (index) => {
-    const restaurant = restaurants[index];
+  const handleLike = (restaurant) => {
     if (restaurant && restaurant.id) {
       const detail = detailsMap[restaurant.id];
       if (detail) {
         addLiked({ ...restaurant, ...detail });
       }
     }
+    // Move to next card
+    goToNextCard();
   };
+
+  const handleReject = (restaurant) => {
+    // Optional: Add logic for rejected restaurants
+    console.log('Rejected:', restaurant.name);
+    // Move to next card
+    goToNextCard();
+  };
+
+  const goToNextCard = () => {
+    if (currentIndex < restaurants.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+
+      // Preload next few cards
+      const nextIndex = currentIndex + 1;
+      for (let i = nextIndex; i <= nextIndex + 2 && i < restaurants.length; i++) {
+        if (restaurants[i] && restaurants[i].id && !detailsMap[restaurants[i].id]) {
+          loadDetails(restaurants[i].id);
+        }
+      }
+    }
+  };
+
+  const currentRestaurant = restaurants[currentIndex];
 
   if (isLoading) {
     return (
@@ -88,28 +95,22 @@ const SwipeScreen = () => {
     <View style={styles.container}>
       {restaurants.length > 0 ? (
         <>
-          <Swiper
-            cards={restaurants}
-            renderCard={(restaurant) => {
-              if (!restaurant || !restaurant.id) {
-                return null;
-              }
-              return (
-                <SwipeCard
-                  restaurant={restaurant}
-                  detail={detailsMap[restaurant.id]}
-                />
-              );
-            }}
-            onSwiped={handleSwiped}
-            onSwipedRight={handleLike}
-            cardIndex={currentIndex}
-            backgroundColor="transparent"
-            stackSize={3}
-          />
-          <Text style={styles.counter}>
-            {currentIndex + 1} / {restaurants.length}
-          </Text>
+          {currentIndex < restaurants.length ? (
+            <View style={styles.cardContainer}>
+              <SwipeCard
+                restaurant={currentRestaurant}
+                detail={detailsMap[currentRestaurant?.id]}
+                onLike={handleLike}
+                onReject={handleReject}
+              />
+            </View>
+          ) : (
+            <View style={styles.endContainer}>
+              <Text style={styles.endText}>🎉 No more restaurants!</Text>
+              <Text style={styles.endSubtext}>Check your liked restaurants in the results tab</Text>
+            </View>
+          )}
+
         </>
       ) : (
         <Text style={styles.noResult}>No restaurants found</Text>
@@ -119,10 +120,45 @@ const SwipeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 16 },
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  noResult: { marginTop: 40, fontSize: 16, textAlign: 'center' },
-  counter: { textAlign: 'center', marginTop: 10, fontSize: 14, color: '#888' },
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  noResult: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#666',
+  },
+  cardContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  endContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  endText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#2c3e50',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  endSubtext: {
+    fontSize: 16,
+    color: '#7f8c8d',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
 });
 
 export default SwipeScreen;

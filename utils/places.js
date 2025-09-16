@@ -4,7 +4,7 @@ import { GOOGLE_API_KEY } from '../config';
 const BASE_URL = 'https://maps.googleapis.com/maps/api/place';
 
 /**
- * Fetches up to ~60 basic nearby restaurants based on filters.
+ * Fetches up to 10 basic nearby restaurants based on filters.
  */
 export const fetchNearbyRestaurants = async (lat, lng, filters = {}) => {
   try {
@@ -38,14 +38,14 @@ export const fetchNearbyRestaurants = async (lat, lng, filters = {}) => {
       if (nextPageToken) {
         await new Promise((res) => setTimeout(res, 2000));
       }
-    } while (nextPageToken && fetchCount < 3); // Up to ~60 total
+    } while (nextPageToken && fetchCount < 1); // Only first page to save API calls
 
     const minRating = parseFloat(filters.rating || '4');
 
-    // Return only basic restaurant info
+    // Return only basic restaurant info - limited to 10
     return allPlaces
       .filter((place) => parseFloat(place.rating || '0') >= minRating)
-      .slice(0, 50)
+      .slice(0, 10)
       .map((place) => ({
         id: place.place_id,
         name: place.name,
