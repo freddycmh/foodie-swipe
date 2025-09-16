@@ -51,6 +51,10 @@ export const fetchNearbyRestaurants = async (lat, lng, filters = {}) => {
         name: place.name,
         rating: place.rating,
         address: place.vicinity,
+        coordinates: place.geometry?.location ? {
+          latitude: place.geometry.location.lat,
+          longitude: place.geometry.location.lng,
+        } : null,
       }));
   } catch (err) {
     console.error('Error fetching restaurants:', err);

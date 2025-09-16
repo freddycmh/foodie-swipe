@@ -1,10 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, ActivityIndicator, Dimensions, TouchableOpacity, Linking, Platform, Alert } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
+import { getUserLocation } from '../utils/location';
+import { calculateDistance } from '../utils/distance';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 const SwipeCard = ({ restaurant, detail }) => {
   const image = detail?.image || 'https://via.placeholder.com/400x300/f0f0f0/999999?text=🍽️+Loading+Image';
+  const [userLocation, setUserLocation] = useState(null);
+  const [distance, setDistance] = useState(null);
+
+  useEffect(() => {
+    const getLocation = async () => {
+      try {
+        const location = await getUserLocation();
+        setUserLocation(location);
+
+        // Calculate distance if we have restaurant coordinates
+        if (restaurant.coordinates && location) {
+          const dist = calculateDistance(
+            location.latitude,
+            location.longitude,
+            restaurant.coordinates.latitude,
+            restaurant.coordinates.longitude
+          );
+          setDistance(dist);
+        }
+      } catch (error) {
+        console.error('Error getting user location:', error);
+      }
+    };
+
+    getLocation();
+  }, [restaurant.coordinates]);
 
   const openDirections = async () => {
     if (!detail?.address && !restaurant.vicinity && !restaurant.address) {
@@ -74,6 +103,42 @@ const SwipeCard = ({ restaurant, detail }) => {
 
       <View style={styles.info}>
         <Text style={styles.name} numberOfLines={2}>{restaurant.name}</Text>
+
+        {/* Map and Distance */}
+        {restaurant.coordinates && userLocation && (
+          <View style={styles.mapContainer}>
+            <MapView
+              style={styles.map}
+              initialRegion={{
+                latitude: (userLocation.latitude + restaurant.coordinates.latitude) / 2,
+                longitude: (userLocation.longitude + restaurant.coordinates.longitude) / 2,
+                latitudeDelta: Math.abs(userLocation.latitude - restaurant.coordinates.latitude) * 2.5 || 0.01,
+                longitudeDelta: Math.abs(userLocation.longitude - restaurant.coordinates.longitude) * 2.5 || 0.01,
+              }}
+              showsUserLocation={false}
+              showsMyLocationButton={false}
+              scrollEnabled={false}
+              zoomEnabled={false}
+              rotateEnabled={false}
+            >
+              <Marker
+                coordinate={userLocation}
+                title="Your Location"
+                pinColor="blue"
+              />
+              <Marker
+                coordinate={restaurant.coordinates}
+                title={restaurant.name}
+                pinColor="red"
+              />
+            </MapView>
+            {distance && (
+              <View style={styles.distanceBadge}>
+                <Text style={styles.distanceText}>📍 {distance}</Text>
+              </View>
+            )}
+          </View>
+        )}
 
         <View style={styles.detailsContainer}>
           {detail?.phone ? (
@@ -245,6 +310,37 @@ const styles = StyleSheet.create({
   directionsIcon: {
     fontSize: 18,
     marginLeft: 8,
+  },
+  mapContainer: {
+    width: '100%',
+    height: 120,
+    marginBottom: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  distanceBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  distanceText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#333',
   },
 });
 
