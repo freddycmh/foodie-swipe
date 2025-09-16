@@ -89,6 +89,7 @@ const HomeScreen = () => {
         <SwipeCard
           restaurant={item}
           detail={detailsMap[item.id]}
+          showActions={false}
         />
       </View>
     );

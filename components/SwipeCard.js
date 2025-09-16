@@ -7,7 +7,7 @@ import { calculateDistance } from '../utils/distance';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-const SwipeCard = ({ restaurant, detail, onLike, onReject }) => {
+const SwipeCard = ({ restaurant, detail, onLike, onReject, showActions = true }) => {
   const image = detail?.image || 'https://via.placeholder.com/400x300/f0f0f0/999999?text=🍽️+Loading+Image';
   const [userLocation, setUserLocation] = useState(null);
   const [distance, setDistance] = useState(null);
@@ -193,22 +193,24 @@ const SwipeCard = ({ restaurant, detail, onLike, onReject }) => {
       </View>
 
       {/* Action Buttons - Floating outside card */}
-      <View style={styles.actionButtons}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.rejectButton]}
-          onPress={() => onReject?.(restaurant)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="close" size={24} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.likeButton]}
-          onPress={() => onLike?.(restaurant)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="heart" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
+      {showActions && (
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.rejectButton]}
+            onPress={() => onReject?.(restaurant)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="close" size={24} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.likeButton]}
+            onPress={() => onLike?.(restaurant)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="heart" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      )}
     </>
   );
 };
