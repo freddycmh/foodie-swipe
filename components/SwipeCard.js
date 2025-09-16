@@ -199,14 +199,14 @@ const SwipeCard = ({ restaurant, detail, onLike, onReject }) => {
           onPress={() => onReject?.(restaurant)}
           activeOpacity={0.8}
         >
-          <Ionicons name="close" size={32} color="#fff" />
+          <Ionicons name="close" size={24} color="#fff" />
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionButton, styles.likeButton]}
           onPress={() => onLike?.(restaurant)}
           activeOpacity={0.8}
         >
-          <Ionicons name="heart" size={32} color="#fff" />
+          <Ionicons name="heart" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
     </>
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     position: 'absolute',
-    bottom: 90, // Space above navigation bar
+    bottom: 70, // Space above smaller navigation bar
     left: 20,
     right: 20,
     flexDirection: 'row',
@@ -386,9 +386,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   actionButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

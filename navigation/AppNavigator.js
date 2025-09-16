@@ -16,10 +16,10 @@ const CustomTabIcon = ({ focused, iconName, color, size }) => {
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: focused ? 'rgba(255, 90, 95, 0.15)' : 'transparent',
-      borderRadius: 16,
-      width: 50,
-      height: 32,
-      marginBottom: 2,
+      borderRadius: 12, // 25% smaller
+      width: 38, // 25% smaller
+      height: 24, // 25% smaller
+      marginBottom: 1, // 25% smaller
     }}>
       <Ionicons
         name={iconName}
@@ -70,36 +70,36 @@ const AppNavigator = () => {
         tabBarInactiveTintColor: '#8E8E93',
         tabBarShowLabel: true,
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 8, // 25% smaller (10 * 0.75 ≈ 8)
           fontWeight: '600',
-          marginBottom: Platform.OS === 'ios' ? 2 : 6,
-          marginTop: 2,
+          marginBottom: Platform.OS === 'ios' ? 1 : 4, // 25% smaller
+          marginTop: 1, // 25% smaller
         },
         tabBarItemStyle: {
-          paddingVertical: 6,
-          paddingHorizontal: 4,
+          paddingVertical: 4, // 25% smaller
+          paddingHorizontal: 3, // 25% smaller
         },
         tabBarStyle: {
           position: 'absolute',
           bottom: 0,
           left: 0,
           right: 0,
-          height: Platform.OS === 'ios' ? 85 : 76,
+          height: Platform.OS === 'ios' ? 64 : 57, // 25% smaller
           backgroundColor: Platform.OS === 'ios' ? 'rgba(255, 255, 255, 0.9)' : '#FFFFFF',
           borderTopWidth: 0,
-          borderRadius: 24,
+          borderRadius: 18, // 25% smaller
           marginHorizontal: 12,
-          marginBottom: Platform.OS === 'ios' ? 24 : 10,
-          paddingBottom: Platform.OS === 'ios' ? 22 : 8,
-          paddingTop: 8,
+          marginBottom: Platform.OS === 'ios' ? 18 : 8, // 25% smaller
+          paddingBottom: Platform.OS === 'ios' ? 17 : 6, // 25% smaller
+          paddingTop: 6, // 25% smaller
           shadowColor: '#000',
           shadowOffset: {
             width: 0,
-            height: -4,
+            height: -3, // 25% smaller
           },
           shadowOpacity: 0.15,
-          shadowRadius: 20,
-          elevation: 20,
+          shadowRadius: 15, // 25% smaller
+          elevation: 15, // 25% smaller
         },
         tabBarBackground: () => (
           Platform.OS === 'ios' ? (
@@ -111,7 +111,7 @@ const AppNavigator = () => {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                borderRadius: 24,
+                borderRadius: 18, // 25% smaller
                 overflow: 'hidden',
               }}
             />
@@ -123,7 +123,7 @@ const AppNavigator = () => {
               right: 0,
               bottom: 0,
               backgroundColor: '#FFFFFF',
-              borderRadius: 24,
+              borderRadius: 18, // 25% smaller
             }} />
           )
         ),
