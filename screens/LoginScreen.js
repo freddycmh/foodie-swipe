@@ -3,34 +3,51 @@ import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    console.log('Trying to log in...');
-    signInWithEmailAndPassword(auth, email, password)
-      .then(() => {
-        console.log('Login success!');
-        navigation.replace("Home");
-      })
-      .catch((error) => {
-        console.log('Login error:', error.message);
-        Alert.alert("Login Error", error.message);
-      });
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("Error", "Please enter both email and password");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      console.log('Login success!');
+    } catch (error) {
+      console.log('Login error:', error.message);
+      Alert.alert("Login Error", error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSignUp = () => {
-    console.log('Trying to sign up...');
-    createUserWithEmailAndPassword(auth, email, password)
-      .then(() => {
-        console.log('Signup success!');
-        Alert.alert("Success", "Account created!");
-      })
-      .catch((error) => {
-        console.log('Signup error:', error.message);
-        Alert.alert("Signup Error", error.message);
-      });
+  const handleSignUp = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("Error", "Please enter both email and password");
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      console.log('Signup success!');
+      Alert.alert("Success", "Account created successfully!");
+    } catch (error) {
+      console.log('Signup error:', error.message);
+      Alert.alert("Signup Error", error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -52,10 +69,10 @@ export default function LoginScreen({ navigation }) {
         secureTextEntry
       />
       <View style={styles.button}>
-        <Button title="Login" onPress={handleLogin} />
+        <Button title={loading ? "Logging in..." : "Login"} onPress={handleLogin} disabled={loading} />
       </View>
       <View style={styles.button}>
-        <Button title="Sign Up" onPress={handleSignUp} />
+        <Button title={loading ? "Creating Account..." : "Sign Up"} onPress={handleSignUp} disabled={loading} />
       </View>
     </View>
   );

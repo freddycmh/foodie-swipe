@@ -15,7 +15,7 @@
       "supportsTablet": true
     },
     "android": {
-      "icon": "./assets/icon.png",    
+      "icon": "./assets/icon.png",
       "splash": {
         "image": "./assets/splash.png",
         "resizeMode": "contain",
@@ -25,6 +25,15 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "GOOGLE_API_KEY": "AIzaSyAloX1a_qxD1uDzlNIypXgfFhNdQOFP1ns",
+      "FIREBASE_API_KEY": "AIzaSyDvrUIhdMhl7md8SFAf9oULxHLotWzUY8E",
+      "FIREBASE_AUTH_DOMAIN": "foodieswipeapp.firebaseapp.com",
+      "FIREBASE_PROJECT_ID": "foodieswipeapp",
+      "FIREBASE_STORAGE_BUCKET": "foodieswipeapp.appspot.com",
+      "FIREBASE_MESSAGING_SENDER_ID": "538210912329",
+      "FIREBASE_APP_ID": "1:538210912329:web:b543239a284ebb77861798"
     }
   }
 }

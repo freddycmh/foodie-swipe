@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, StyleSheet, FlatList } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, FlatList, Text, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import SwipeCard from '../components/SwipeCard';
 import { fetchNearbyRestaurants, fetchPlaceDetails } from '../utils/places';
 import { getUserLocation } from '../utils/location';
 import { useFilter } from '../context/FilterContext';
+import { useAuth } from '../context/AuthContext';
 
 const HomeScreen = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -12,6 +14,27 @@ const HomeScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const { filters } = useFilter();
+  const { logout, user, isDemoMode } = useAuth();
+
+  const handleLogout = () => {
+    if (isDemoMode) {
+      Alert.alert(
+        "Demo Mode",
+        "Authentication is temporarily disabled for testing purposes.",
+        [{ text: "OK", style: "default" }]
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Logout", style: "destructive", onPress: logout }
+      ]
+    );
+  };
 
   useEffect(() => {
     const loadRestaurants = async () => {
@@ -73,6 +96,19 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerTitle}>Discover Restaurants</Text>
+          {isDemoMode && (
+            <View style={styles.demoTag}>
+              <Text style={styles.demoText}>DEMO</Text>
+            </View>
+          )}
+        </View>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+          <Ionicons name="log-out-outline" size={24} color="#FF5A5F" />
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={restaurants}
         keyExtractor={(item) => item.place_id || item.id}
@@ -98,6 +134,44 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#212529',
+  },
+  demoTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: '#FFF3CD',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#FFEAA7',
+  },
+  demoText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#856404',
+  },
+  logoutButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#fff5f5',
   },
   loader: {
     flex: 1,
