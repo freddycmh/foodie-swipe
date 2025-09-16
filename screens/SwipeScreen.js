@@ -24,8 +24,13 @@ const SwipeScreen = () => {
         const basicList = await fetchNearbyRestaurants(location.latitude, location.longitude, filters);
         setRestaurants(basicList);
 
-        // Preload first 10 card details
-        basicList.slice(0, 10).forEach((r) => {
+        // Load first card details immediately before showing swiper
+        if (basicList.length > 0 && basicList[0] && basicList[0].id) {
+          await loadDetails(basicList[0].id);
+        }
+
+        // Preload next 9 card details in background
+        basicList.slice(1, 10).forEach((r) => {
           if (r && r.id) {
             loadDetails(r.id);
           }

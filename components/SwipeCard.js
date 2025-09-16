@@ -4,7 +4,7 @@ import { View, Text, Image, StyleSheet, ActivityIndicator, Dimensions, Touchable
 const { width: screenWidth } = Dimensions.get('window');
 
 const SwipeCard = ({ restaurant, detail }) => {
-  const image = detail?.image || 'https://via.placeholder.com/400?text=Loading...';
+  const image = detail?.image || 'https://via.placeholder.com/400x300/f0f0f0/999999?text=🍽️+Loading+Image';
 
   const openDirections = async () => {
     if (!detail?.address && !restaurant.vicinity && !restaurant.address) {
