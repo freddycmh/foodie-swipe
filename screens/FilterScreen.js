@@ -12,6 +12,7 @@ const options = {
   cuisine: ['Any', 'Japanese', 'Mexican', 'Italian', 'Chinese', 'Thai', 'Indian', 'American'],
   budget: ['Any', '$', '$$', '$$$'],
   rating: ['Any', '3+', '4+', '4.5+'],
+  radius: ['Any', '1 km', '2 km', '5 km', '10 km', '15 km'],
 };
 
 const FilterScreen = () => {
@@ -21,6 +22,7 @@ const FilterScreen = () => {
   const [selectedCuisine, setSelectedCuisine] = useState('Any');
   const [selectedBudget, setSelectedBudget] = useState('Any');
   const [selectedRating, setSelectedRating] = useState('Any');
+  const [selectedRadius, setSelectedRadius] = useState('Any');
   const [modalVisible, setModalVisible] = useState(null);
 
   useEffect(() => {
@@ -29,6 +31,7 @@ const FilterScreen = () => {
         options.cuisine.find(c => c.toLowerCase() === filters.cuisine) || 'Any' : 'Any');
       setSelectedBudget(filters.budget || 'Any');
       setSelectedRating(filters.rating ? `${filters.rating}+` : 'Any');
+      setSelectedRadius(filters.radius ? `${filters.radius} km` : 'Any');
     }
   }, [filters]);
 
@@ -38,6 +41,7 @@ const FilterScreen = () => {
         cuisine: selectedCuisine === 'Any' ? null : selectedCuisine.toLowerCase(),
         budget: selectedBudget === 'Any' ? null : selectedBudget,
         rating: selectedRating === 'Any' ? null : parseFloat(selectedRating.replace('+', '')),
+        radius: selectedRadius === 'Any' ? null : parseInt(selectedRadius.replace(' km', '')),
       };
       setFilters(newFilters);
       navigation.navigate('SwipeMain');
@@ -50,6 +54,7 @@ const FilterScreen = () => {
     setSelectedCuisine('Any');
     setSelectedBudget('Any');
     setSelectedRating('Any');
+    setSelectedRadius('Any');
   };
 
   const getIconForCategory = (key) => {
@@ -57,6 +62,7 @@ const FilterScreen = () => {
       case 'cuisine': return '🍽️';
       case 'budget': return '💰';
       case 'rating': return '⭐';
+      case 'radius': return '📍';
       default: return '🔧';
     }
   };
@@ -128,17 +134,11 @@ const FilterScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#FF5A5F" />
-
-      <View style={styles.header}>
-        <View style={styles.headerGradient}>
-          <Text style={styles.title}>🔍 Filter Restaurants</Text>
-          <Text style={styles.subtitle}>Discover your perfect dining experience</Text>
-        </View>
-      </View>
+      <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.filtersContainer}>
+          {renderOptionGroup('Distance', options.radius, selectedRadius, setSelectedRadius, 'radius')}
           {renderOptionGroup('Cuisine Type', options.cuisine, selectedCuisine, setSelectedCuisine, 'cuisine')}
           {renderOptionGroup('Price Range', options.budget, selectedBudget, setSelectedBudget, 'budget')}
           {renderOptionGroup('Minimum Rating', options.rating, selectedRating, setSelectedRating, 'rating')}
@@ -146,6 +146,10 @@ const FilterScreen = () => {
 
         <View style={styles.summaryCard}>
           <Text style={styles.summaryTitle}>Current Filters</Text>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Distance:</Text>
+            <Text style={styles.summaryValue}>{selectedRadius}</Text>
+          </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Cuisine:</Text>
             <Text style={styles.summaryValue}>{selectedCuisine}</Text>
@@ -181,43 +185,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9fa',
   },
-  header: {
-    paddingBottom: 0,
-  },
-  headerGradient: {
-    backgroundColor: '#FF5A5F',
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 40,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: '#FF5A5F',
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 10,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 8,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.9)',
-    textAlign: 'center',
-    fontWeight: '400',
-  },
   content: {
     flex: 1,
-    marginTop: -20,
   },
   filtersContainer: {
     paddingHorizontal: 20,
-    paddingTop: 30,
+    paddingTop: 20,
   },
   group: {
     marginBottom: 32,

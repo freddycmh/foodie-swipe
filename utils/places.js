@@ -14,7 +14,7 @@ export const fetchNearbyRestaurants = async (lat, lng, filters = {}) => {
 
     const baseParams = {
       location: `${lat},${lng}`,
-      radius: 2000,
+      radius: filters.radius ? filters.radius * 1000 : 2000, // Convert km to meters, default 2km
       type: 'restaurant',
       keyword: filters.cuisine || '',
       minprice: filters.budget === '$' ? 0 : filters.budget === '$$' ? 1 : 2,
