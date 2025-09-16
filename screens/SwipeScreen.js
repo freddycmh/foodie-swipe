@@ -25,7 +25,11 @@ const SwipeScreen = () => {
         setRestaurants(basicList);
 
         // Preload first 10 card details
-        basicList.slice(0, 10).forEach((r) => loadDetails(r.id));
+        basicList.slice(0, 10).forEach((r) => {
+          if (r && r.id) {
+            loadDetails(r.id);
+          }
+        });
       } catch (err) {
         console.error(err);
       } finally {
@@ -51,15 +55,19 @@ const SwipeScreen = () => {
 
     // Preload next 3 cards
     for (let i = index + 1; i <= index + 3 && i < restaurants.length; i++) {
-      loadDetails(restaurants[i].id);
+      if (restaurants[i] && restaurants[i].id) {
+        loadDetails(restaurants[i].id);
+      }
     }
   };
 
   const handleLike = (index) => {
     const restaurant = restaurants[index];
-    const detail = detailsMap[restaurant.id];
-    if (restaurant && detail) {
-      addLiked({ ...restaurant, ...detail });
+    if (restaurant && restaurant.id) {
+      const detail = detailsMap[restaurant.id];
+      if (detail) {
+        addLiked({ ...restaurant, ...detail });
+      }
     }
   };
 
@@ -77,12 +85,17 @@ const SwipeScreen = () => {
         <>
           <Swiper
             cards={restaurants}
-            renderCard={(restaurant) => (
-              <SwipeCard
-                restaurant={restaurant}
-                detail={detailsMap[restaurant.id]}
-              />
-            )}
+            renderCard={(restaurant) => {
+              if (!restaurant || !restaurant.id) {
+                return null;
+              }
+              return (
+                <SwipeCard
+                  restaurant={restaurant}
+                  detail={detailsMap[restaurant.id]}
+                />
+              );
+            }}
             onSwiped={handleSwiped}
             onSwipedRight={handleLike}
             cardIndex={currentIndex}

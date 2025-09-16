@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, Modal, SafeAreaView, StatusBar, ScrollView, Dimensions
+  View, Text, TouchableOpacity, StyleSheet, Modal, StatusBar, ScrollView, Dimensions
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useFilter } from '../context/FilterContext';
 
