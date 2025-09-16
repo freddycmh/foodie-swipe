@@ -9,7 +9,12 @@ import { useFilter } from '../context/FilterContext';
 const { width: screenWidth } = Dimensions.get('window');
 
 const options = {
-  cuisine: ['Any', 'Japanese', 'Mexican', 'Italian', 'Chinese', 'Thai', 'Indian', 'American'],
+  cuisine: [
+    'Any', 'American', 'Asian', 'BBQ', 'Breakfast', 'Burger', 'Cafe', 'Chinese',
+    'French', 'Greek', 'Indian', 'Italian', 'Japanese', 'Korean', 'Mediterranean',
+    'Mexican', 'Middle Eastern', 'Pizza', 'Seafood', 'Steakhouse', 'Sushi',
+    'Thai', 'Vietnamese', 'Vegetarian', 'Vegan'
+  ],
   budget: ['Any', '$', '$$', '$$$'],
   rating: ['Any', '3+', '4+', '4.5+'],
   radius: ['Any', '1 km', '2 km', '5 km', '10 km', '15 km'],

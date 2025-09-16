@@ -110,6 +110,9 @@ const SwipeCard = ({ restaurant, detail, onLike, onReject, showActions = true })
 
           <View style={styles.info}>
             <Text style={styles.name} numberOfLines={2}>{restaurant.name}</Text>
+            {restaurant.cuisine && (
+              <Text style={styles.cuisine}>{restaurant.cuisine}</Text>
+            )}
 
             {/* Map and Distance */}
             {restaurant.coordinates && userLocation && (
@@ -280,8 +283,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
     color: '#2c3e50',
-    marginBottom: 16,
+    marginBottom: 8,
     lineHeight: 28,
+  },
+  cuisine: {
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+    color: '#7f8c8d',
+    marginBottom: 16,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   detailsContainer: {
     width: '100%',

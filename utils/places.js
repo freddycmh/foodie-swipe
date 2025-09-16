@@ -4,6 +4,50 @@ import { GOOGLE_API_KEY } from '../config';
 const BASE_URL = 'https://maps.googleapis.com/maps/api/place';
 
 /**
+ * Maps Google Places types to cuisine categories
+ */
+const getCuisineFromTypes = (types) => {
+  const cuisineMap = {
+    'chinese_restaurant': 'Chinese',
+    'japanese_restaurant': 'Japanese',
+    'korean_restaurant': 'Korean',
+    'thai_restaurant': 'Thai',
+    'vietnamese_restaurant': 'Vietnamese',
+    'indian_restaurant': 'Indian',
+    'italian_restaurant': 'Italian',
+    'french_restaurant': 'French',
+    'greek_restaurant': 'Greek',
+    'mexican_restaurant': 'Mexican',
+    'american_restaurant': 'American',
+    'seafood_restaurant': 'Seafood',
+    'steakhouse': 'Steakhouse',
+    'sushi_restaurant': 'Sushi',
+    'pizza_restaurant': 'Pizza',
+    'barbecue_restaurant': 'BBQ',
+    'vegetarian_restaurant': 'Vegetarian',
+    'vegan_restaurant': 'Vegan',
+    'cafe': 'Cafe',
+    'bakery': 'Bakery',
+    'breakfast_restaurant': 'Breakfast',
+    'meal_takeaway': 'Takeaway',
+    'meal_delivery': 'Delivery',
+  };
+
+  // Find the first matching cuisine type
+  for (const type of types) {
+    if (cuisineMap[type]) {
+      return cuisineMap[type];
+    }
+  }
+
+  // Fallback to general categories
+  if (types.includes('restaurant')) return 'Restaurant';
+  if (types.includes('food')) return 'Food';
+
+  return 'Restaurant'; // Default fallback
+};
+
+/**
  * Fetches up to 10 basic nearby restaurants based on filters.
  */
 export const fetchNearbyRestaurants = async (lat, lng, filters = {}) => {
@@ -51,6 +95,7 @@ export const fetchNearbyRestaurants = async (lat, lng, filters = {}) => {
         name: place.name,
         rating: place.rating,
         address: place.vicinity,
+        cuisine: getCuisineFromTypes(place.types || []),
         coordinates: place.geometry?.location ? {
           latitude: place.geometry.location.lat,
           longitude: place.geometry.location.lng,
