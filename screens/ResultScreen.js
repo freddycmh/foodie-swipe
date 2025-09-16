@@ -4,16 +4,14 @@ import {
   Text,
   FlatList,
   StyleSheet,
-  SafeAreaView,
-  StatusBar,
   TouchableOpacity,
   Image,
   Linking,
   Platform,
   Alert,
   Dimensions,
-  ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLiked } from '../context/LikedContext';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -88,138 +86,88 @@ const ResultScreen = () => {
   };
 
   const renderItem = ({ item }) => {
-    const isExpanded = expandedItems[item.place_id || item.id];
     const address = item.address || item.vicinity;
 
     return (
       <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Image
-            source={{ uri: item.image || 'https://via.placeholder.com/80?text=🍽️' }}
-            style={styles.restaurantImage}
-          />
-          <View style={styles.headerInfo}>
+        <Image
+          source={{ uri: item.image || 'https://via.placeholder.com/400x200/f5f5f5/999?text=🍽️' }}
+          style={styles.image}
+        />
+
+        <View style={styles.content}>
+          <View style={styles.header}>
             <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
-            <View style={styles.ratingContainer}>
-              <Text style={styles.rating}>⭐ {item.rating || 'N/A'}</Text>
-              <Text style={styles.ratingText}>
-                {item.rating ? `${item.rating}/5.0` : 'No rating'}
-              </Text>
-            </View>
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={() => handleRemove(item)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.removeIcon}>×</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.removeButton}
-            onPress={() => handleRemove(item)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.removeIcon}>❌</Text>
-          </TouchableOpacity>
-        </View>
 
-        <View style={styles.quickActions}>
-          {item.phone && item.phone !== 'N/A' && (
-            <TouchableOpacity
-              style={[styles.actionButton, styles.callButton]}
-              onPress={() => makePhoneCall(item.phone)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.actionIcon}>📞</Text>
-              <Text style={styles.actionText}>Call</Text>
-            </TouchableOpacity>
-          )}
-
-          {address && (
-            <TouchableOpacity
-              style={[styles.actionButton, styles.directionsButton]}
-              onPress={() => openDirections(address)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.actionIcon}>🧭</Text>
-              <Text style={styles.actionText}>Directions</Text>
-            </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            style={[styles.actionButton, styles.expandButton]}
-            onPress={() => toggleExpanded(item.place_id || item.id)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.actionIcon}>{isExpanded ? '📤' : '📥'}</Text>
-            <Text style={styles.actionText}>{isExpanded ? 'Less' : 'More'}</Text>
-          </TouchableOpacity>
-        </View>
-
-        {isExpanded && (
-          <View style={styles.expandedContent}>
+          <View style={styles.info}>
+            <Text style={styles.rating}>⭐ {item.rating || 'N/A'}</Text>
             {address && (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailIcon}>📍</Text>
-                <Text style={styles.detailText}>{address}</Text>
-              </View>
-            )}
-
-            {item.phone && item.phone !== 'N/A' && (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailIcon}>📱</Text>
-                <Text style={styles.detailText}>{item.phone}</Text>
-              </View>
-            )}
-
-            {item.hours && item.hours.length > 0 && (
-              <View style={styles.detailSection}>
-                <Text style={styles.sectionTitle}>🕒 Opening Hours</Text>
-                {item.hours.slice(0, 3).map((hour, index) => (
-                  <Text key={index} style={styles.hourText}>{hour}</Text>
-                ))}
-                {item.hours.length > 3 && (
-                  <Text style={styles.moreHours}>
-                    +{item.hours.length - 3} more days
-                  </Text>
-                )}
-              </View>
+              <Text style={styles.address} numberOfLines={2}>{address}</Text>
             )}
           </View>
-        )}
+
+          <View style={styles.actions}>
+            {item.phone && item.phone !== 'N/A' && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => makePhoneCall(item.phone)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.actionText}>📞 Call</Text>
+              </TouchableOpacity>
+            )}
+
+            {address && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => openDirections(address)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.actionText}>🗺️ Directions</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
       </View>
     );
   };
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Text style={styles.emptyIcon}>💔</Text>
-      <Text style={styles.emptyTitle}>No Liked Restaurants Yet</Text>
+      <Text style={styles.emptyIcon}>🍽️</Text>
+      <Text style={styles.emptyTitle}>No saved restaurants</Text>
       <Text style={styles.emptySubtitle}>
-        Start swiping to discover and save your favorite restaurants!
+        Swipe right on restaurants you like to save them here
       </Text>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" backgroundColor="#FF5A5F" />
-
       <View style={styles.header}>
-        <View style={styles.headerGradient}>
-          <Text style={styles.title}>❤️ Your Favorites</Text>
-          <Text style={styles.subtitle}>
-            {liked.length > 0 ? `${liked.length} saved restaurant${liked.length === 1 ? '' : 's'}` : 'No restaurants saved yet'}
-          </Text>
-        </View>
+        <Text style={styles.title}>Saved Restaurants</Text>
+        <Text style={styles.subtitle}>{liked.length} places</Text>
       </View>
 
-      <View style={styles.container}>
-        {liked.length > 0 ? (
-          <FlatList
-            data={liked}
-            keyExtractor={(item) => item.place_id || item.id}
-            renderItem={renderItem}
-            contentContainerStyle={styles.listContainer}
-            showsVerticalScrollIndicator={false}
-          />
-        ) : (
-          renderEmptyState()
-        )}
-      </View>
+      {liked.length > 0 ? (
+        <FlatList
+          data={liked}
+          keyExtractor={(item) => item.place_id || item.id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        renderEmptyState()
+      )}
     </SafeAreaView>
   );
 };
@@ -230,212 +178,128 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   header: {
-    paddingBottom: 0,
-  },
-  headerGradient: {
-    backgroundColor: '#FF5A5F',
     paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 40,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: '#FF5A5F',
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 10,
+    paddingTop: 16,
+    paddingBottom: 20,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
   },
   title: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 8,
-    letterSpacing: -0.5,
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#212529',
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
-    color: 'rgba(255,255,255,0.9)',
-    textAlign: 'center',
+    color: '#6c757d',
     fontWeight: '400',
   },
-  container: {
-    flex: 1,
-    marginTop: -20,
-  },
   listContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 30,
-    paddingBottom: 40,
+    padding: 16,
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    marginBottom: 20,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 8,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
     overflow: 'hidden',
   },
-  cardHeader: {
+  image: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#f8f9fa',
+  },
+  content: {
+    padding: 16,
+  },
+  header: {
     flexDirection: 'row',
-    padding: 20,
-    alignItems: 'center',
-  },
-  restaurantImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 16,
-    backgroundColor: '#f1f3f4',
-  },
-  headerInfo: {
-    flex: 1,
-    marginLeft: 16,
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
   name: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#2c3e50',
-    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#212529',
+    flex: 1,
+    marginRight: 12,
     lineHeight: 24,
   },
-  ratingContainer: {
-    flexDirection: 'row',
+  removeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f8f9fa',
+    justifyContent: 'center',
     alignItems: 'center',
+  },
+  removeIcon: {
+    fontSize: 18,
+    color: '#6c757d',
+    fontWeight: '400',
+  },
+  info: {
+    marginBottom: 16,
+    gap: 6,
   },
   rating: {
     fontSize: 16,
-    fontWeight: '600',
-    marginRight: 8,
-  },
-  ratingText: {
-    fontSize: 14,
-    color: '#7f8c8d',
     fontWeight: '500',
+    color: '#495057',
   },
-  removeButton: {
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: '#fff5f5',
+  address: {
+    fontSize: 14,
+    color: '#6c757d',
+    lineHeight: 20,
   },
-  removeIcon: {
-    fontSize: 20,
-  },
-  quickActions: {
+  actions: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingBottom: 20,
     gap: 12,
   },
   actionButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     paddingVertical: 12,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  callButton: {
-    backgroundColor: '#e3f2fd',
+    paddingHorizontal: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#2196f3',
-  },
-  directionsButton: {
-    backgroundColor: '#e8f5e8',
-    borderWidth: 1,
-    borderColor: '#4caf50',
-  },
-  expandButton: {
-    backgroundColor: '#f3e5f5',
-    borderWidth: 1,
-    borderColor: '#9c27b0',
-  },
-  actionIcon: {
-    fontSize: 16,
-    marginRight: 6,
+    borderColor: '#e9ecef',
   },
   actionText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#2c3e50',
-  },
-  expandedContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#f1f3f4',
-    backgroundColor: '#fafbfc',
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f3f4',
-  },
-  detailIcon: {
-    fontSize: 16,
-    marginRight: 12,
-    marginTop: 2,
-  },
-  detailText: {
-    flex: 1,
-    fontSize: 15,
+    fontWeight: '500',
     color: '#495057',
-    lineHeight: 20,
-  },
-  detailSection: {
-    paddingTop: 16,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2c3e50',
-    marginBottom: 12,
-  },
-  hourText: {
-    fontSize: 14,
-    color: '#6c757d',
-    marginBottom: 4,
-    paddingLeft: 20,
-  },
-  moreHours: {
-    fontSize: 14,
-    color: '#9c27b0',
-    fontStyle: 'italic',
-    paddingLeft: 20,
-    marginTop: 4,
   },
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
-    paddingTop: 40,
+    paddingHorizontal: 32,
   },
   emptyIcon: {
-    fontSize: 80,
-    marginBottom: 24,
+    fontSize: 64,
+    marginBottom: 16,
   },
   emptyTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#2c3e50',
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#495057',
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: '#7f8c8d',
+    color: '#6c757d',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
   },
 });
 

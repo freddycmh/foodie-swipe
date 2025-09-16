@@ -1,60 +1,94 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  SafeAreaView,
-  ScrollView,
-} from 'react-native';
+import { View, ActivityIndicator, StyleSheet, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import SwipeCard from '../components/SwipeCard';
+import { fetchNearbyRestaurants, fetchPlaceDetails } from '../utils/places';
 import { getUserLocation } from '../utils/location';
-import { fetchNearbyRestaurants } from '../utils/places';
+import { useFilter } from '../context/FilterContext';
 
 const HomeScreen = () => {
   const [restaurants, setRestaurants] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [detailsMap, setDetailsMap] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  const { filters } = useFilter();
 
   useEffect(() => {
     const loadRestaurants = async () => {
+      setIsLoading(true);
       try {
-        const coords = await getUserLocation();
-        const data = await fetchNearbyRestaurants(coords.latitude, coords.longitude);
-        setRestaurants(data);
-      } catch (error) {
-        console.error('Error fetching restaurants:', error);
+        const location = await getUserLocation();
+        const basicList = await fetchNearbyRestaurants(location.latitude, location.longitude, filters);
+        setRestaurants(basicList);
+
+        // Load details for first few cards
+        basicList.slice(0, 5).forEach((r) => {
+          if (r && r.id) {
+            loadDetails(r.id);
+          }
+        });
+      } catch (err) {
+        console.error(err);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
     loadRestaurants();
-  }, []);
+  }, [filters]);
 
-  if (loading) {
-    return <ActivityIndicator style={{ flex: 1 }} size="large" />;
+  const loadDetails = async (placeId) => {
+    if (detailsMap[placeId]) return;
+    try {
+      const detail = await fetchPlaceDetails(placeId);
+      setDetailsMap((prev) => ({ ...prev, [placeId]: detail }));
+    } catch (err) {
+      console.error('Error loading detail for', placeId, err);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
+
+  const renderRestaurant = ({ item }) => {
+    // Load details when scrolled to this item
+    if (!detailsMap[item.id] && item.id) {
+      loadDetails(item.id);
+    }
+
+    return (
+      <View style={styles.cardContainer}>
+        <SwipeCard
+          restaurant={item}
+          detail={detailsMap[item.id]}
+        />
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Nearby Restaurants</Text>
       <FlatList
         data={restaurants}
         keyExtractor={(item) => item.place_id || item.id}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.info}>{item.address || item.vicinity}</Text>
-            <Text style={styles.info}>⭐ {item.rating || 'N/A'}</Text>
-            <Text style={styles.info}>
-              ☎ {item.phone !== 'N/A' ? item.phone : 'Phone not available'}
-            </Text>
-            {item.hours?.[0] && (
-              <Text style={styles.info}>🕒 {item.hours[0]}</Text> // Only show today's hours
-            )}
-          </View>
-        )}
-        contentContainerStyle={{ paddingBottom: 20 }}
+        renderItem={renderRestaurant}
+        contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+        onEndReached={() => {
+          // Load more details as user scrolls
+          const startIndex = Math.min(restaurants.length - 5, 5);
+          restaurants.slice(startIndex, startIndex + 5).forEach((r) => {
+            if (r && r.id && !detailsMap[r.id]) {
+              loadDetails(r.id);
+            }
+          });
+        }}
+        onEndReachedThreshold={0.5}
       />
     </SafeAreaView>
   );
@@ -63,34 +97,19 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  listContainer: {
     padding: 16,
-    backgroundColor: '#fff',
+    gap: 20,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-    color: '#FF5A5F',
-  },
-  card: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 12,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 10,
-    borderColor: '#eee',
-    borderWidth: 1,
-  },
-  name: {
-    fontSize: 17,
-    fontWeight: '600',
+  cardContainer: {
     marginBottom: 4,
-  },
-  info: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 2,
   },
 });
 
