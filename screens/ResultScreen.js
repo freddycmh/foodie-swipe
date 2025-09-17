@@ -153,8 +153,8 @@ const ResultScreen = () => {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <Text style={styles.title}>Saved Restaurants</Text>
-        <Text style={styles.subtitle}>{liked.length} places</Text>
+        <Text style={styles.title}>❤️ Saved</Text>
+        <Text style={styles.subtitle}>{liked.length} {liked.length === 1 ? 'place' : 'places'}</Text>
       </View>
 
       {liked.length > 0 ? (
@@ -178,23 +178,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 20,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+    paddingHorizontal: 48,
+    paddingTop: 40,
+    paddingBottom: 40,
+    backgroundColor: '#f8f9fa',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#212529',
-    marginBottom: 4,
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 6,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
-    color: '#6c757d',
-    fontWeight: '400',
+    fontSize: 14,
+    color: '#7f8c8d',
+    fontWeight: '500',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   listContainer: {
     padding: 16,
