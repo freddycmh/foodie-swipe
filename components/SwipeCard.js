@@ -1,16 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, ActivityIndicator, Dimensions, TouchableOpacity, Linking, Platform, Alert, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import { getUserLocation } from '../utils/location';
 import { calculateDistance } from '../utils/distance';
 
 const { width: screenWidth } = Dimensions.get('window');
 
+// Function to calculate optimal map region based on two coordinates
+const calculateMapRegion = (userCoords, restaurantCoords) => {
+  if (!userCoords || !restaurantCoords) return null;
+
+  const minLat = Math.min(userCoords.latitude, restaurantCoords.latitude);
+  const maxLat = Math.max(userCoords.latitude, restaurantCoords.latitude);
+  const minLng = Math.min(userCoords.longitude, restaurantCoords.longitude);
+  const maxLng = Math.max(userCoords.longitude, restaurantCoords.longitude);
+
+  const centerLat = (minLat + maxLat) / 2;
+  const centerLng = (minLng + maxLng) / 2;
+
+  // Calculate the distance between the points
+  const latDelta = Math.abs(maxLat - minLat);
+  const lngDelta = Math.abs(maxLng - minLng);
+
+  // Add padding to ensure both points are visible with some margin
+  const paddingFactor = 1.5; // Increase this to zoom out more
+  const minDelta = 0.005; // Minimum zoom level for very close locations
+  const maxDelta = 0.5; // Maximum zoom level for very far locations
+
+  let adjustedLatDelta = Math.max(latDelta * paddingFactor, minDelta);
+  let adjustedLngDelta = Math.max(lngDelta * paddingFactor, minDelta);
+
+  // Cap the maximum delta to prevent zooming out too far
+  adjustedLatDelta = Math.min(adjustedLatDelta, maxDelta);
+  adjustedLngDelta = Math.min(adjustedLngDelta, maxDelta);
+
+  return {
+    latitude: centerLat,
+    longitude: centerLng,
+    latitudeDelta: adjustedLatDelta,
+    longitudeDelta: adjustedLngDelta,
+  };
+};
+
 const SwipeCard = ({ restaurant, detail, onLike, onReject, showActions = true }) => {
   const image = detail?.image || 'https://via.placeholder.com/400x300/f0f0f0/999999?text=🍽️+Loading+Image';
   const [userLocation, setUserLocation] = useState(null);
   const [distance, setDistance] = useState(null);
+  const [mapRegion, setMapRegion] = useState(null);
+
+  // Function to recalculate and refresh map view
+  const refreshMapView = () => {
+    if (userLocation && restaurant.coordinates) {
+      const region = calculateMapRegion(userLocation, restaurant.coordinates);
+      setMapRegion(region);
+    }
+  };
 
   useEffect(() => {
     const getLocation = async () => {
@@ -18,7 +63,7 @@ const SwipeCard = ({ restaurant, detail, onLike, onReject, showActions = true })
         const location = await getUserLocation();
         setUserLocation(location);
 
-        // Calculate distance if we have restaurant coordinates
+        // Calculate distance and map region if we have restaurant coordinates
         if (restaurant.coordinates && location) {
           const dist = calculateDistance(
             location.latitude,
@@ -27,6 +72,10 @@ const SwipeCard = ({ restaurant, detail, onLike, onReject, showActions = true })
             restaurant.coordinates.longitude
           );
           setDistance(dist);
+
+          // Calculate optimal map region
+          const region = calculateMapRegion(location, restaurant.coordinates);
+          setMapRegion(region);
         }
       } catch (error) {
         console.error('Error getting user location:', error);
@@ -118,27 +167,45 @@ const SwipeCard = ({ restaurant, detail, onLike, onReject, showActions = true })
             {restaurant.coordinates && userLocation && (
               <View style={styles.mapContainer}>
                 <MapView
+                  key={`${restaurant.id}-${userLocation.latitude}-${userLocation.longitude}`}
                   style={styles.map}
-                  initialRegion={{
+                  region={mapRegion || {
                     latitude: (userLocation.latitude + restaurant.coordinates.latitude) / 2,
                     longitude: (userLocation.longitude + restaurant.coordinates.longitude) / 2,
-                    latitudeDelta: Math.abs(userLocation.latitude - restaurant.coordinates.latitude) * 2.5 || 0.01,
-                    longitudeDelta: Math.abs(userLocation.longitude - restaurant.coordinates.longitude) * 2.5 || 0.01,
+                    latitudeDelta: 0.05,
+                    longitudeDelta: 0.05,
                   }}
                   showsUserLocation={false}
                   showsMyLocationButton={false}
-                  scrollEnabled={false}
-                  zoomEnabled={false}
+                  scrollEnabled={true}
+                  zoomEnabled={true}
                   rotateEnabled={false}
+                  pitchEnabled={false}
+                  mapType="standard"
+                  showsTraffic={false}
+                  showsBuildings={true}
+                  showsPointsOfInterest={true}
+                  onRegionChangeComplete={(region) => {
+                    // Optional: Update mapRegion when user manually changes the view
+                    // setMapRegion(region);
+                  }}
                 >
+                  <Polyline
+                    coordinates={[userLocation, restaurant.coordinates]}
+                    strokeColor="#4285F4"
+                    strokeWidth={2}
+                    strokePattern={[15, 10]}
+                  />
                   <Marker
                     coordinate={userLocation}
                     title="Your Location"
+                    description="You are here"
                     pinColor="blue"
                   />
                   <Marker
                     coordinate={restaurant.coordinates}
                     title={restaurant.name}
+                    description="Tap for directions"
                     pinColor="red"
                   />
                 </MapView>
@@ -147,6 +214,13 @@ const SwipeCard = ({ restaurant, detail, onLike, onReject, showActions = true })
                     <Text style={styles.distanceText}>📍 {distance}</Text>
                   </View>
                 )}
+                <TouchableOpacity
+                  style={styles.refreshButton}
+                  onPress={refreshMapView}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="refresh" size={16} color="#fff" />
+                </TouchableOpacity>
               </View>
             )}
 
@@ -361,11 +435,16 @@ const styles = StyleSheet.create({
   },
   mapContainer: {
     width: '100%',
-    height: 120,
+    height: 140,
     marginBottom: 16,
     borderRadius: 12,
     overflow: 'hidden',
     position: 'relative',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   map: {
     width: '100%',
@@ -389,6 +468,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#333',
+  },
+  refreshButton: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   actionButtons: {
     position: 'absolute',
